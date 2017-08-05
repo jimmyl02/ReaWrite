@@ -8,6 +8,16 @@ export default class Article extends React.Component {
     title: 'View article',
   }
 
+  constructor(props){
+    super(props);
+    this.state = { username: 'tmp', content: 'tmp' };
+  }
+
+  componentWillMount(){
+    const username = this.props.navigation.state.params.username;
+    this.setState({ username: username })
+  }
+
   render() {
     const articleId = this.props.navigation.state.params.articleId;
     //Get article by id from api
@@ -22,7 +32,7 @@ export default class Article extends React.Component {
             <View style={styles.subHead}>
               <View style={styles.name}>
                 <RkText style={styles.title} rkCardTitle>{articleTitle}</RkText>
-                <RkText style={styles.subtitle} rkCardSubTitle>By: {author}</RkText>
+                <RkText style={styles.subtitle} rkCardSubTitle>By: {this.state.username}</RkText>
               </View>
             </View>
           </View>
@@ -31,7 +41,7 @@ export default class Article extends React.Component {
         }
         <RkCard style={styles.container}>
           <View rkCardContent style={styles.content}>
-            <RkText>{content}</RkText>
+            <RkText>{this.state.content}</RkText>
           </View>
         </RkCard>
         <RkCard style={styles.container}>

@@ -1,30 +1,67 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import {  RkButton, RkCard, RkText } from 'react-native-ui-kitten';
 
 export default class ArticleCard extends React.Component {
 
+  constructor(props){
+    super(props);
+    this.state = { username: '', ready: false }
+  }
+
+  getUsername = (userId) => {
+    //console.log("Query string", 'http://104.236.138.179/api/v1/users/username/' + userId);
+    console.log("call", "getUsername");
+    fetch('http://104.236.138.179/api/v1/users/username/' + userId)
+    .then(userData => userData.json())
+    .then(userData => {
+      this.setState({ username: userData.username })
+      this.setState({ ready: true })
+    })
+  }
+
+  componentWillMount(){
+    author = this.props.author
+    this.getUsername(author);
+  }
+
   render() {
-    const { articleId, articleTitle, author, description, navigation } = this.props;
+    let { articleId, articleTitle, description, navigation } = this.props;
     //l8ter only take in articleId, and call API, then get the other stuff automagically
-    return (
-      <RkCard style={styles.container}>
-        <View rkCardContent style={styles.content}>
-          <View style={styles.subHead}>
-            <View style={styles.name}>
-              <RkText style={styles.title} rkCardTitle>{articleTitle}</RkText>
-              <RkText style={styles.subtitle} rkCardSubTitle>By: {author}</RkText>
-            </View>
+
+    //articleId="1"
+    //author="1"
+    //description="Yo"
+    //articleTitle="Test"
+
+    if(this.state.ready == false){
+      return (
+        <RkCard style={styles.container}>
+          <View rkCardContent style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+            <ActivityIndicator />
           </View>
-          <RkText>{description}</RkText>
-        </View>
-        <View rkCardFooter style={styles.footer}>
-          <RkButton innerStyle={styles.textButton} onPress={() => navigation.navigate("Article", { articleId: articleId } )}>
-            VIEW MORE
-          </RkButton>
-        </View>
-      </RkCard>
-    );
+        </RkCard>
+        );
+    }else{
+      return (
+        <RkCard style={styles.container}>
+          <View rkCardContent style={styles.content}>
+            <View style={styles.subHead}>
+              <View style={styles.name}>
+                <RkText style={styles.title} rkCardTitle>{articleTitle}</RkText>
+                <RkText style={styles.subtitle} rkCardSubTitle>By: {this.state.username}</RkText>
+              </View>
+            </View>
+            <RkText>{description}</RkText>
+          </View>
+          <View rkCardFooter style={styles.footer}>
+            <RkButton innerStyle={styles.textButton} onPress={() => navigation.navigate("Article", { articleId: articleId, username: this.state.username } )}>
+              VIEW MORE
+            </RkButton>
+          </View>
+        </RkCard>
+      );
+    }
   }
 }
 
