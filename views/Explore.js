@@ -3,6 +3,7 @@ import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import ArticleCard from '../components/ArticleCard';
 import Search from 'react-native-search-box';
 
+/*
   const nonJsonArticleData = {
     "articleId" : "1",
     "userId" : "1",
@@ -23,6 +24,7 @@ import Search from 'react-native-search-box';
   };
 
   const JSONUserData = JSON.stringify(nonJsonUserData);
+*/
 
 export default class Explore extends React.Component {
 
@@ -37,12 +39,17 @@ export default class Explore extends React.Component {
   }
 
   initLoad = () => {
-    console.log("call", "initLoad");
+    //console.log("call", "initLoad");
     fetch('http://104.236.138.179/api/v1/articles/random')
       .then(article => article.json())
       .then(article => {
+        //console.log("article", article);
+        return article;
+      })
+      .then(article => {
         let tmp = [];
         tmp.push(article)
+        //console.log("tmpLog", tmp)
         this.setState({ data: tmp });
         //console.log("data", this.state.data);
         this.setState({ ready: true })
@@ -54,7 +61,7 @@ export default class Explore extends React.Component {
     //Currently using mock, later fetch and parse
     //Need maybe put username along with data so that getting author name will be faster
     for ( let i = 0; i < 2; i++){
-      console.log("call", "loadMore");
+      //console.log("call", "loadMore");
       /*
       fetch('http://104.236.138.179/api/v1/articles/random').then(article => {
         let rows = this.state.data;
@@ -91,9 +98,9 @@ export default class Explore extends React.Component {
               />
                 <FlatList
                   data={this.state.data}
+                  keyExtractor={(item, index) => index}
                   renderItem={({item}) => 
                     <ArticleCard 
-                      key={item.articleId} 
                       articleId={item.articleId} 
                       articleTitle={item.title} 
                       author={item.userId} 
@@ -102,7 +109,7 @@ export default class Explore extends React.Component {
                     />
                   }
                   onEndReached={({ distanceFromEnd }) => {
-                    this.loadMore();
+                    //this.loadMore();
                   }}
                   onEndThreshold={0.5}
                 />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import {  RkButton, RkCard, RkText } from 'react-native-ui-kitten';
 
 export default class Article extends React.Component {
@@ -10,38 +10,46 @@ export default class Article extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { username: 'tmp', content: 'tmp' };
+    this.state = { username: '', articleTitle: '', content: '', ready: false };
   }
 
   componentWillMount(){
     const username = this.props.navigation.state.params.username;
-    this.setState({ username: username })
+    this.setState({ username: username });
+    const articleTitle = this.props.navigation.state.params.articleTitle;
+    this.setState({ articleTitle: articleTitle });
+    const articleId = this.props.navigation.state.params.articleId;
+    this.getArticleContent(articleId);
+  }
+
+  getArticleContent = (articleId) => {
+    fetch('http://104.236.138.179/api/v1/articles/content/' + articleId)
+    .then(article => article.json())
+    .then(article => {
+      this.setState({ content: article.content })
+      this.setState({ ready: true })
+    })
   }
 
   render() {
-    const articleId = this.props.navigation.state.params.articleId;
     //Get article by id from api
     //Using dummy data in this case
-    let articleTitle = "Yo this is a short story";
-    let author = "jimz";
-    let content = "aijfaowpi aperuhgo iaeurbgaierbgiarebgia eurbgiaurbg iaeurbg iaeurbg iaourbg iaerubgoiaurgb aioeurbg iaeurgb iaeurbg oaiergb aeorg uboiaer";
+    //let content = "aijfaowpi aperuhgo iaeurbgaierbgiarebgia eurbgiaurbg iaeurbg iaeurbg iaourbg iaerubgoiaurgb aioeurbg iaeurgb iaeurbg oaiergb aeorg uboiaer";
     return (
       <View style={styles.container}>
         <RkCard style={styles.container}>
           <View rkCardContent style={styles.content}>
             <View style={styles.subHead}>
               <View style={styles.name}>
-                <RkText style={styles.title} rkCardTitle>{articleTitle}</RkText>
+                <RkText style={styles.title} rkCardTitle>{this.state.articleTitle}</RkText>
                 <RkText style={styles.subtitle} rkCardSubTitle>By: {this.state.username}</RkText>
               </View>
             </View>
           </View>
         </RkCard>
-        {//Portion #2
-        }
         <RkCard style={styles.container}>
           <View rkCardContent style={styles.content}>
-            <RkText>{this.state.content}</RkText>
+            {this.state.ready ? <RkText>{this.state.content}</RkText> : <ActivityIndicator style={{flex: 1, alignItems: 'center', justifyContent: 'center'}} /> }
           </View>
         </RkCard>
         <RkCard style={styles.container}>

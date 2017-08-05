@@ -11,13 +11,17 @@ export default class ArticleCard extends React.Component {
 
   getUsername = (userId) => {
     //console.log("Query string", 'http://104.236.138.179/api/v1/users/username/' + userId);
-    console.log("call", "getUsername");
+    //console.log("call", "getUsername");
     fetch('http://104.236.138.179/api/v1/users/username/' + userId)
     .then(userData => userData.json())
     .then(userData => {
+      //console.log("userData", userData);
       this.setState({ username: userData.username })
       this.setState({ ready: true })
     })
+    .catch(function (err) {
+      console.error(err)
+    });
   }
 
   componentWillMount(){
@@ -55,7 +59,7 @@ export default class ArticleCard extends React.Component {
             <RkText>{description}</RkText>
           </View>
           <View rkCardFooter style={styles.footer}>
-            <RkButton innerStyle={styles.textButton} onPress={() => navigation.navigate("Article", { articleId: articleId, username: this.state.username } )}>
+            <RkButton innerStyle={styles.textButton} onPress={() => navigation.navigate("Article", { articleId: articleId, articleTitle: articleTitle, username: this.state.username } )}>
               VIEW MORE
             </RkButton>
           </View>

@@ -11,7 +11,38 @@ export default class Upload extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { title: '', description: '', content: '' }
+    this.state = { title: '', description: '', content: '', retArticleId: '', visibleError: false, visibleSuccess: false }
+  }
+
+  check = () => {
+    this.setState({ visibleSuccess: false, visibleError: false })
+    if(this.state.title.length > 0 && this.state.description.length > 0 && this.state.content.length > 0){
+      this.setState({ visibleSuccess: true });
+      this.upload();
+    }else{
+      this.setState({ visibleError: true });
+    }
+  }
+
+  upload = () => {
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        //Tmp until login system
+        userId: String(1),
+        title: String(this.state.title),
+        description: String(this.state.description),
+        fileURL: String(this.state.content)
+      })
+    }
+    fetch('http://104.236.138.179/api/v1/articles/create', options)
+    .then(article => article.json())
+    .then(article => {
+      this.setState({ retArticleId: article.articleId })
+    })
   }
 
   render() {
@@ -30,7 +61,7 @@ export default class Upload extends React.Component {
         <RkCard style={styles.container}>
           <View rkCardContent style={styles.content}>
             <View style={styles.subHead}>
-              <RkText style={styles.subtitle} rkCardSubTitle>Title (25 characters)</RkText>
+              <RkText style={styles.subtitle} rkCardSubTitle>Title (30 characters)</RkText>
             </View>
           </View>
         </RkCard>
@@ -38,12 +69,12 @@ export default class Upload extends React.Component {
           placeholder='Enter your title here'
           multiline={true}
           editable={true}
-          maxLength={25}
+          maxLength={30}
           onChangeText={(text) => {
             this.setState({ title: text});
             //console.log("onChangeText", "Title");
           }}
-          value={this.state.description}
+          value={this.state.title}
         />        
         <RkCard style={styles.container}>
           <View rkCardContent style={styles.content}>
@@ -83,8 +114,35 @@ export default class Upload extends React.Component {
           }}
           value={this.state.content}
         />
-      <RkButton style={{ flex: 1, flexDirection: 'row', alignSelf: 'stretch' }}>Upload!</RkButton>
+        <View style={ this.state.visibleError ? {display: 'unset'} : {display: 'none'}}>
+          <RkCard style={styles.container}>
+            <View rkCardContent style={styles.content}>
+              <View style={styles.subHead}>
+                <RkText style={styles.subtitleError}>Error! Make sure all fields are filled out!</RkText>
+              </View>
+            </View>
+          </RkCard>
+        </View>
+        <View style={ this.state.visibleSuccess ? {display: 'unset'} : {display: 'none'}}>
+          <RkCard style={styles.container}>
+            <View rkCardContent style={styles.content}>
+              <View style={styles.subHead}>
+                <RkText style={styles.subtitleSuccess}>
+                  Success! Your article has now been uploaded
+                  Your article's ID is: {this.state.retArticleId}
+                </RkText>
+              </View>
+            </View>
+          </RkCard>
+        </View>
       </View>
+      <RkButton 
+        style={{ flex:1, flexDirection:'row', alignSelf:'center', marginBottom: 10, marginTop: 5 }} 
+        onPress={() => 
+          this.check()
+        }>
+        Upload!
+      </RkButton>
       </ScrollView>
     );
   }
@@ -131,6 +189,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: -2,
     color: '#808080'
+  },
+  subtitleError: {
+    fontSize: 14,
+    marginTop: -2,
+    alignSelf: 'center',
+    color: '#F44242'
+  },
+  subtitleSuccess: {
+    fontSize: 14,
+    marginTop: -2,
+    alignSelf: 'center',
+    color: '#41F462'
   },
   textButton: {
     color: '#009688'

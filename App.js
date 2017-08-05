@@ -11,6 +11,8 @@ import Upload from './views/Upload';
 import Notifications from './views/Notifications';
 import Profile from './views/Profile';
 import Settings from './views/Settings';
+import Login from './views/Login';
+//import Register from './views/Register'
 
 /*
 NOT PART OF MVP
@@ -26,7 +28,8 @@ const StackExplore = StackNavigator({
 });
 
 const StackUpload = StackNavigator({
-  Upload: { screen: Upload }
+  Upload: { screen: Upload },
+  Login: { screen: Login }
 });
 
 /*
@@ -37,7 +40,8 @@ const StackNotifications = StackNavigator({
 */
 
 const StackProfile = StackNavigator({
-  Profile: { screen: Profile }
+  Profile: { screen: Profile },
+  Login: { screen: Login }
 });
 
 const TabRoutes = TabNavigator({
