@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View, ScrollView, AsyncStorage } from 'react-native';
 //import { RichTextEditor } from 'react-native-zss-rich-text-editor';
 import {  RkButton, RkCard, RkText, RkTextInput } from 'react-native-ui-kitten';
 
@@ -11,14 +11,54 @@ export default class Upload extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { title: '', description: '', content: '', retArticleId: '', visibleError: false, visibleSuccess: false }
+    this.state = { 
+      token: '', 
+      username: '', 
+      title: '', 
+      description: '', 
+      content: '', 
+      retArticleId: '', 
+      visibleError: false, 
+      visibleSuccess: false, 
+      loggedIn: false,
+      }
   }
 
-  check = () => {
+  checkLoggedIn = () => {
+    try {
+      AsyncStorage.getItem('token')
+      .then(token => {
+        if (token != null && token.length > 0){
+          this.setState({ loggedIn: true });
+          this.setState({ ready: true })
+        }else{
+          this.setState({ loggedIn: false });
+          this.setState({ ready: true })
+        }
+      })
+    } catch(err){
+      console.error(err);
+    }
+  }
+
+  componentWillMount(){
+    this.checkLoggedIn();
+  }
+
+  // Get the username and token from storage to verify when uploading
+  check = async () => {
     this.setState({ visibleSuccess: false, visibleError: false })
-    if(this.state.title.length > 0 && this.state.description.length > 0 && this.state.content.length > 0){
+    if(this.state.title.length > 0 && this.state.description.length > 0 && this.state.content.length > 0) {
       this.setState({ visibleSuccess: true });
+
+      const token = await AsyncStorage.getItem('token');
+      await this.setState({ token: token});
+
+      const username = await AsyncStorage.getItem('username');
+      await this.setState({ username: username});
+
       this.upload();
+
     }else{
       this.setState({ visibleError: true });
     }
@@ -29,23 +69,26 @@ export default class Upload extends React.Component {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-access-token': this.state.token
       },
       body: JSON.stringify({
         //Tmp until login system
-        userId: String(1),
+        userId: String(this.state.username),
         title: String(this.state.title),
         description: String(this.state.description),
         fileURL: String(this.state.content)
       })
     }
-    fetch('http://104.236.138.179/api/v1/articles/create', options)
+    fetch('http://104.236.138.179/api/v1/protected/articles/create', options)
     .then(article => article.json())
     .then(article => {
-      this.setState({ retArticleId: article.articleId })
+      this.setState({ visibleSuccess: true, retArticleId: article.articleId })
     })
   }
 
   render() {
+    if(this.state.loggedIn == true){
+      //Logged in
     return (
       <ScrollView>
       <View style={styles.container}>
@@ -145,6 +188,15 @@ export default class Upload extends React.Component {
       </RkButton>
       </ScrollView>
     );
+    }else{
+      //Not logged in
+      return (
+          <View style={styles.notLoginWrapper}>
+            <RkText>You are not currently logged in.</RkText>
+            <RkText>Go to profile to log in!</RkText>
+          </View>
+      );
+    }
   }
 }
 
@@ -208,5 +260,11 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     color: '#A9A9A9'
-  }
+  },
+  notLoginWrapper: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

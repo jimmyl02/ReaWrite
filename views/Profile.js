@@ -40,6 +40,7 @@ export default class Profile extends React.Component {
       return (
         <View style={styles.container}>
           <RkText>Hi</RkText>
+          <RkButton onPress={() => AsyncStorage.clear()}>Clear AsyncStorage</RkButton>
         </View>
       );
     }else{

@@ -1,7 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, AsyncStorage, Button } from 'react-native';
 import {  RkButton, RkText, RkTextInput } from 'react-native-ui-kitten';
-import { sha256 } from 'react-native-sha256';
+import md5 from 'react-native-md5';
+
 
 export default class Login extends React.Component {
 
@@ -11,32 +12,47 @@ export default class Login extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { username:'', password: '', ready: false }
+    this.state = { username:'', password: '', errDisplayText: '', errVisible: false, successDisplayText: '', successVisible: false }
   }
 
-  submit = () => {
-    sha256(this.state.password).then(shaPass => {
-      const options = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          //Tmp until login system
-          username: String(this.state.username),
-          password: String(shaPass),
+  checkFields = () => {
+    if(this.state.username.length > 0 && this.state.password.length > 0){
+      this.setState({ errVisible: false });
+      this.submit(this.state.username, this.state.password);
+    }else{
+      this.setState({ errDisplayText: 'All fields must be filled out', errVisible: true })
+    }
+  }
+
+  submit = (username, password) => {
+    const hex_md5v = md5.hex_md5(password)
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: String(username),
+        password: String(hex_md5v),
+      })
+    }
+    //console.log("Hashed", hex_md5v);
+    fetch('http://104.236.138.179/api/v1/users/auth', options)
+    .then(response => {
+      if(response.status != 200){              
+        this.setState({ errDisplayText: 'The username does not match the password', errVisible: true })
+      }else{
+        response.json()
+        .then(response => {
+          AsyncStorage.setItem("token", response.token);
+          AsyncStorage.setItem("username", username);
+          this.setState({ errVisible: false, successDisplayText: 'You have successfully logged in!', successVisible: true})
         })
       }
-      fetch('http://104.236.138.179/api/v1/users/auth', options)
-      .then(response => response.json())
-      .then(response => {
-        //Check response status
-        AsyncStorage.setItem("token", response.token)
-      })
-      .catch(function (err) {
-        console.error(err);
-      });
     })
+    .catch(function (err) {
+      console.error(err);
+    });
   }
 
   render() {
@@ -44,8 +60,16 @@ export default class Login extends React.Component {
     return (
       <View style={styles.container}>
         <RkText style={{ fontSize: 20 }}>Login</RkText>
+        <View style={ this.state.errVisible ? {display: 'unset'} : {display: 'none'}}>
+          <RkText style={styles.subtitleError}>{this.state.errDisplayText}</RkText>
+        </View>
+        <View style={ this.state.successVisible ? {display: 'unset'} : {display: 'none'}}>
+          <RkText style={styles.subtitleSuccess}>{this.state.successDisplayText}</RkText>
+        </View>
         <RkTextInput
           placeholder='Enter your username'
+          autoCapitalize='none'
+          autoCorrect={false}
           multiline={false}
           editable={true}
           maxLength={30}
@@ -57,6 +81,8 @@ export default class Login extends React.Component {
         />
         <RkTextInput
           placeholder='Enter your password'
+          autoCapitalize='none'
+          autoCorrect={false}
           multiline={false}
           secureTextEntry={true}
           editable={true}
@@ -66,7 +92,7 @@ export default class Login extends React.Component {
           }}
           value={this.state.password}
         />
-        <RkButton style={{  }} onPress={() => this.submit}>Login</RkButton>
+        <RkButton style={{  }} onPress={() => this.checkFields()}>Login</RkButton>
         <View style={ styles.register }>
           <RkText style={{ marginTop: 10 }}>Don't have an account? </RkText><Button onPress={() => navigation.navigate('Register')} title="register"/>
         </View>
@@ -85,5 +111,17 @@ const styles = StyleSheet.create({
   register: {
     flexDirection: 'row',
     flexWrap: 'wrap'
-  }
+  },
+  subtitleSuccess: {
+    fontSize: 14,
+    marginTop: -2,
+    alignSelf: 'center',
+    color: '#41F462'
+  },
+  subtitleError: {
+    fontSize: 14,
+    marginTop: 4.5,
+    alignSelf: 'center',
+    color: '#F44242'
+  },
 });
