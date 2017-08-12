@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, View, FlatList } from 'react-native';
+import { StyleSheet, View, FlatList, ActivityIndicator } from 'react-native';
 import ArticleCard from '../components/ArticleCard';
 import Search from 'react-native-search-box';
 
+/*
   const nonJsonArticleData = {
     "articleId" : "1",
     "userId" : "1",
@@ -23,6 +24,7 @@ import Search from 'react-native-search-box';
   };
 
   const JSONUserData = JSON.stringify(nonJsonUserData);
+*/
 
 export default class Explore extends React.Component {
 
@@ -32,54 +34,88 @@ export default class Explore extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { data: [] };
+    this.state = { data: [], ready: false };
     this.initLoad();
   }
 
   initLoad = () => {
-      fetch('104.236.138.179/api/v1/articles/random').then(article => console.log(article)).then(article => article.json())
-        .then(article => {
-          //let rows = this.state.data;
-          //rows.push(article);
-          //this.setState({ data: [article] })
-          console.log(article)
-        });
+    //console.log("call", "initLoad");
+    fetch('http://104.236.138.179/api/v1/articles/random')
+      .then(article => article.json())
+      .then(article => {
+        //console.log("article", article);
+        return article;
+      })
+      .then(article => {
+        let tmp = [];
+        tmp.push(article)
+        //console.log("tmpLog", tmp)
+        this.setState({ data: tmp });
+        //console.log("data", this.state.data);
+        this.setState({ ready: true })
+      })
+      .catch(console.error)
   }
 
   loadMore = () => {
     //Currently using mock, later fetch and parse
     //Need maybe put username along with data so that getting author name will be faster
     for ( let i = 0; i < 2; i++){
+      //console.log("call", "loadMore");
+      /*
       fetch('http://104.236.138.179/api/v1/articles/random').then(article => {
         let rows = this.state.data;
         rows.push(JSON.parse(article));
         this.setState({ data: rows })
-      });
+      })
+        .catch(console.error);
+        */
+    fetch('http://104.236.138.179/api/v1/articles/random')
+      .then(article => article.json())
+      .then(article => {
+        let tmp = this.state.data;
+        tmp.push(article)
+        this.setState({ data: tmp });
+        //console.log("data", this.state.data);
+      })
+      .catch(console.error)
     }
   }
 
   render() {
 
-    return (
-      <View style={styles.container}>
-            <Search
-              ref="search_box"
-              /**
-              * There many props that can customizable
-              * Please scroll down to Props section
-              */
-            />
-              <FlatList
-                data={this.state.data}
-                keyExtractor={(item, index) => item.id}
-                renderItem={(item) => <ArticleCard key={item.articleId} articleId={item.articleId} articleTitle={item.articleTitle} author={item.username} description={item.description} navigation={this.props.navigation}/>}
-                onEndReached={({ distanceFromEnd }) => {
-                  //this.loadMore();
-                }}
-                onEndThreshold={0.5}
+    if(this.state.ready == false) {
+      return (
+        <View style = {{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
+          <ActivityIndicator />
+        </View>
+      )
+    }else{
+      return (
+        <View style={styles.container}>
+              <Search
+                ref="search_box"
               />
-      </View>
-    );
+                <FlatList
+                  data={this.state.data}
+                  keyExtractor={(item, index) => index}
+                  renderItem={({item}) => 
+                    <ArticleCard 
+                      articleId={item.articleId} 
+                      articleTitle={item.title} 
+                      author={item.userId} 
+                      description={item.description} 
+                      navigation={this.props.navigation}
+                    />
+                  }
+                  onEndReached={({ distanceFromEnd }) => {
+                    this.loadMore();
+                  }}
+                  onEndThreshold={0.5}
+                />
+        </View>
+      );
+    }
   }
 }
 
