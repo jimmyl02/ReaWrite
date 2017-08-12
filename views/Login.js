@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, AsyncStorage, Button } from 'react-native';
+import { StyleSheet, View, AsyncStorage, Button, ActivityIndicator } from 'react-native';
 import {  RkButton, RkText, RkTextInput } from 'react-native-ui-kitten';
 import md5 from 'react-native-md5';
 
@@ -12,7 +12,28 @@ export default class Login extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = { username:'', password: '', errDisplayText: '', errVisible: false, successDisplayText: '', successVisible: false }
+    this.state = { userId: '', username:'', password: '', errDisplayText: '', errVisible: false, successDisplayText: '', successVisible: false, ready: false }
+  }
+
+  componentWillMount(){
+    this.checkLoggedIn();
+  }
+
+  checkLoggedIn = () => {
+    try {
+      AsyncStorage.getItem('token')
+      .then(token => {
+        if (token != null && token.length > 0){
+          this.props.navigation.navigate("MainNav");
+          //console.log("Logged in: ", true)
+        }else{
+          this.setState({ ready: true })
+          //console.log("Logged in:", false)
+        }
+      })
+    } catch(err){
+      console.error(err);
+    }
   }
 
   checkFields = () => {
@@ -25,6 +46,7 @@ export default class Login extends React.Component {
   }
 
   submit = (username, password) => {
+    this.setState({ errVisible: false, successVisible: false })
     const hex_md5v = md5.hex_md5(password)
     const options = {
       method: 'POST',
@@ -44,9 +66,7 @@ export default class Login extends React.Component {
       }else{
         response.json()
         .then(response => {
-          AsyncStorage.setItem("token", response.token);
-          AsyncStorage.setItem("username", username);
-          this.setState({ errVisible: false, successDisplayText: 'You have successfully logged in!', successVisible: true})
+          this.setAndFinish(response.token, username);
         })
       }
     })
@@ -55,49 +75,71 @@ export default class Login extends React.Component {
     });
   }
 
+  getUserId = async (username) => {
+    await fetch("http://104.236.138.179/api/v1/users/userId/" + username)
+      .then(userIdRes => userIdRes.json())
+      .then(userId => AsyncStorage.setItem("userId", userId.userId))
+  }
+
+  setAndFinish = async (token, username) => {
+    await AsyncStorage.setItem("token", token);
+    await AsyncStorage.setItem("username", username);
+    await this.getUserId(username);
+    this.setState({ errVisible: false, successDisplayText: 'You have successfully logged in!', successVisible: true})
+    this.props.navigation.navigate("MainNav");
+  }
+
   render() {
-    const navigation = this.props.navigation.state.params.navigation;
-    return (
-      <View style={styles.container}>
-        <RkText style={{ fontSize: 20 }}>Login</RkText>
-        <View style={ this.state.errVisible ? {display: 'unset'} : {display: 'none'}}>
-          <RkText style={styles.subtitleError}>{this.state.errDisplayText}</RkText>
+    if(this.state.ready == true){
+    //const navigation = this.props.navigation.state.params.navigation;
+      return (
+        <View style={styles.container}>
+          <RkText style={{ fontSize: 20 }}>Login</RkText>
+          <View style={ this.state.errVisible ? {display: 'unset'} : {display: 'none'}}>
+            <RkText style={styles.subtitleError}>{this.state.errDisplayText}</RkText>
+          </View>
+          <View style={ this.state.successVisible ? {display: 'unset'} : {display: 'none'}}>
+            <RkText style={styles.subtitleSuccess}>{this.state.successDisplayText}</RkText>
+          </View>
+          <RkTextInput
+            placeholder='Enter your username'
+            autoCapitalize='none'
+            autoCorrect={false}
+            multiline={false}
+            editable={true}
+            maxLength={30}
+            onChangeText={(text) => {
+              this.setState({ username: text});
+              //console.log("onChangeText", "Title");
+            }}
+            value={this.state.username}
+          />
+          <RkTextInput
+            placeholder='Enter your password'
+            autoCapitalize='none'
+            autoCorrect={false}
+            multiline={false}
+            secureTextEntry={true}
+            editable={true}
+            onChangeText={(text) => {
+              this.setState({ password: text});
+              //console.log("onChangeText", "Title");
+            }}
+            value={this.state.password}
+          />
+          <RkButton style={{  }} onPress={() => this.checkFields()}>Login</RkButton>
+          <View style={ styles.register }>
+            <RkText style={{ marginTop: 10 }}>Don't have an account? </RkText><Button onPress={() => this.props.navigation.navigate('Register')} title="register"/>
+          </View>
         </View>
-        <View style={ this.state.successVisible ? {display: 'unset'} : {display: 'none'}}>
-          <RkText style={styles.subtitleSuccess}>{this.state.successDisplayText}</RkText>
+      );
+    }else{
+      return (
+        <View style={{alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator />
         </View>
-        <RkTextInput
-          placeholder='Enter your username'
-          autoCapitalize='none'
-          autoCorrect={false}
-          multiline={false}
-          editable={true}
-          maxLength={30}
-          onChangeText={(text) => {
-            this.setState({ username: text});
-            //console.log("onChangeText", "Title");
-          }}
-          value={this.state.username}
-        />
-        <RkTextInput
-          placeholder='Enter your password'
-          autoCapitalize='none'
-          autoCorrect={false}
-          multiline={false}
-          secureTextEntry={true}
-          editable={true}
-          onChangeText={(text) => {
-            this.setState({ password: text});
-            //console.log("onChangeText", "Title");
-          }}
-          value={this.state.password}
-        />
-        <RkButton style={{  }} onPress={() => this.checkFields()}>Login</RkButton>
-        <View style={ styles.register }>
-          <RkText style={{ marginTop: 10 }}>Don't have an account? </RkText><Button onPress={() => navigation.navigate('Register')} title="register"/>
-        </View>
-      </View>
-    );
+      );
+    }
   }
 }
 

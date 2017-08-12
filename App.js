@@ -40,11 +40,10 @@ const StackNotifications = StackNavigator({
 
 const StackProfile = StackNavigator({
   Profile: { screen: Profile },
-  Login: { screen: Login },
-  Register: { screen: Register }
+  Article: { screen: Article }
 });
 
-const TabRoutes = TabNavigator({
+const MainNav = TabNavigator({
   //StackFeed: { screen: StackFeed },
   StackExplore: { screen: StackExplore,
     navigationOptions: {
@@ -67,4 +66,18 @@ const TabRoutes = TabNavigator({
   }
 });
 
-export default TabRoutes;
+const InitialNav = StackNavigator({
+  Login: { screen: Login,
+    navigationOptions: {
+      headerLeft: null
+    }
+  },
+  Register: { screen: Register },
+  MainNav: { screen: MainNav,
+    navigationOptions: {
+      header: null
+    }
+  }
+});
+
+export default InitialNav;

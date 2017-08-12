@@ -109,7 +109,7 @@ export default class Explore extends React.Component {
                     />
                   }
                   onEndReached={({ distanceFromEnd }) => {
-                    //this.loadMore();
+                    this.loadMore();
                   }}
                   onEndThreshold={0.5}
                 />

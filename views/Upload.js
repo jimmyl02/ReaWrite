@@ -14,35 +14,18 @@ export default class Upload extends React.Component {
     this.state = { 
       token: '', 
       username: '', 
+      userId: '',
       title: '', 
       description: '', 
       content: '', 
       retArticleId: '', 
       visibleError: false, 
       visibleSuccess: false, 
-      loggedIn: false,
       }
   }
 
-  checkLoggedIn = () => {
-    try {
-      AsyncStorage.getItem('token')
-      .then(token => {
-        if (token != null && token.length > 0){
-          this.setState({ loggedIn: true });
-          this.setState({ ready: true })
-        }else{
-          this.setState({ loggedIn: false });
-          this.setState({ ready: true })
-        }
-      })
-    } catch(err){
-      console.error(err);
-    }
-  }
-
   componentWillMount(){
-    this.checkLoggedIn();
+    //this.checkLoggedIn();
   }
 
   // Get the username and token from storage to verify when uploading
@@ -56,6 +39,9 @@ export default class Upload extends React.Component {
 
       const username = await AsyncStorage.getItem('username');
       await this.setState({ username: username});
+
+      const userId = await AsyncStorage.getItem('userId');
+      await this.setState({ userId: userId })
 
       this.upload();
 
@@ -73,7 +59,7 @@ export default class Upload extends React.Component {
       },
       body: JSON.stringify({
         //Tmp until login system
-        userId: String(this.state.username),
+        userId: String(this.state.userId),
         title: String(this.state.title),
         description: String(this.state.description),
         fileURL: String(this.state.content)
@@ -87,8 +73,7 @@ export default class Upload extends React.Component {
   }
 
   render() {
-    if(this.state.loggedIn == true){
-      //Logged in
+    //Logged in
     return (
       <ScrollView>
       <View style={styles.container}>
@@ -127,7 +112,7 @@ export default class Upload extends React.Component {
           </View>
         </RkCard>
         <RkTextInput
-          inputStyle={{ height: 100 }}
+          inputStyle={{ height: 50 }}
           placeholder='Enter your description here'
           multiline={true}
           editable={true}
@@ -146,7 +131,7 @@ export default class Upload extends React.Component {
           </View>
         </RkCard>
         <RkTextInput
-          inputStyle={{ height: 150 }}
+          inputStyle={{ height: 100 }}
           placeholder='Enter your article here'
           multiline={true}
           editable={true}
@@ -171,7 +156,7 @@ export default class Upload extends React.Component {
             <View rkCardContent style={styles.content}>
               <View style={styles.subHead}>
                 <RkText style={styles.subtitleSuccess}>
-                  Success! Your article has now been uploaded
+                  Success! Your article has now been uploaded.
                   Your article's ID is: {this.state.retArticleId}
                 </RkText>
               </View>
@@ -188,15 +173,6 @@ export default class Upload extends React.Component {
       </RkButton>
       </ScrollView>
     );
-    }else{
-      //Not logged in
-      return (
-          <View style={styles.notLoginWrapper}>
-            <RkText>You are not currently logged in.</RkText>
-            <RkText>Go to profile to log in!</RkText>
-          </View>
-      );
-    }
   }
 }
 
